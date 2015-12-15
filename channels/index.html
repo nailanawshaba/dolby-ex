@@ -1,0 +1,109 @@
+<!--
+
+Special thanks to Boris Smus for this helpful example
+
+http://www.html5rocks.com/en/tutorials/webaudio/intro/
+
+-->
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+  </head>
+<body>
+
+<center>
+  <div style="padding:50px;">
+    <button id="leftButton">Left</button>
+    <button id="centerButton">Center</button>
+    <button id="rightButton">Right</button>
+    <br/>
+    <button id="rearLeftButton">Rear Left</button>
+    <button id="bassButton">Bass</button>
+    <button id="rearRightButton">Rear Right</button>
+  </div>
+</center>
+
+<script src="bufferLoader.js"></script>
+
+<script>
+
+(function() {
+
+'use strict'
+
+var context;
+var bufferLoader;
+
+window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+
+context = new AudioContext();
+
+var audio = new Audio();
+
+context.createMediaElementSource(audio);
+
+bufferLoader = new BufferLoader(
+  context,
+  [
+    'assets/left.wav',
+    'assets/right.wav',
+    'assets/center.wav',      
+    'assets/bass.wav',
+    'assets/rear-left.wav',
+    'assets/rear-right.wav'
+  ],
+  finishedLoading
+  );
+
+bufferLoader.load();
+
+function finishedLoading(bufferList) {
+
+  var maxChannelCount = context.destination.maxChannelCount;
+
+  // Sets the destination properties for multichannel access.
+  context.destination.channelCount = maxChannelCount;
+  context.destination.channelCountMode = 'explicit';
+  context.destination.channelInterpretation = 'discrete';
+
+  // The ChannelMerger for the individual channel access.
+  var merger = context.createChannelMerger(maxChannelCount);
+  merger.channelCountMode = 'explicit';
+  merger.channelInterpretation = 'discrete';
+  merger.connect(context.destination);
+
+  document.getElementById("leftButton").addEventListener("click", function(){
+    playSound( bufferList[0], 0 );
+  });
+  document.getElementById("centerButton").addEventListener("click", function(){
+    playSound( bufferList[2], 2 );
+  });
+  document.getElementById("rightButton").addEventListener("click", function(){
+    playSound( bufferList[1], 1 );
+  });  
+  document.getElementById("bassButton").addEventListener("click", function(){
+    playSound( bufferList[3], 3 );
+  }); 
+  document.getElementById("rearRightButton").addEventListener("click", function(){
+    playSound( bufferList[5], 5 );
+  }); 
+  document.getElementById("rearLeftButton").addEventListener("click", function(){
+    playSound( bufferList[4], 4 );
+  }); 
+
+  function playSound( buffer, channel ) {
+      var sound = context.createBufferSource();
+      sound.buffer = buffer;
+      sound.connect(merger, 0, channel);      
+      sound.start(0);    
+  }
+
+}
+
+}).call(this);
+
+</script>
+
+</body>
+</html>

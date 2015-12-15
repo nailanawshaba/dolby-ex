@@ -1,0 +1,92 @@
+<!--
+
+Special thanks to Boris Smus for this helpful example
+
+http://www.html5rocks.com/en/tutorials/webaudio/intro/
+
+-->
+
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+  </head>
+<body>
+
+<center>
+  <div style="padding:50px;" id="buttons">
+  </div>
+</center>
+
+<script src="https://s3-us-west-1.amazonaws.com/dolbydeveloper/1.1.0/js/dolby.min.js"></script>
+<script src="buffer-loader.js"></script>
+
+<script>
+
+(function() {
+
+  'use strict'
+
+  var context;
+  var bufferLoader;
+  var bufferList;
+
+  var sounds = [
+    'assets/sonar.wav', // sonar
+    'assets/cheer.wav', // cheer
+    'assets/laugh.wav', //laughing
+  ];
+
+
+  // Fix up prefixing
+  window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+  context = new AudioContext();
+
+  bufferLoader = new BufferLoader(
+    context,
+    sounds,
+    finishedLoading
+    );
+
+  bufferLoader.load();
+
+
+function finishedLoading(bufferList) {
+
+  var div = document.getElementById('buttons');
+
+  var btn = document.createElement("BUTTON");
+  var t = document.createTextNode("Sonar");
+  btn.addEventListener("click", function(){ playSound(bufferList[ 0 ])} );
+  btn.appendChild(t);  
+  div.appendChild(btn);
+
+  var btn = document.createElement("BUTTON");
+  var t = document.createTextNode("Cheer");
+  btn.addEventListener("click", function(){ playSound(bufferList[ 1 ])} );
+  btn.appendChild(t);  
+  div.appendChild(btn);
+
+  var btn = document.createElement("BUTTON");
+  var t = document.createTextNode("Laugh");
+  btn.addEventListener("click", function(){ playSound(bufferList[ 2 ])} );
+  btn.appendChild(t);  
+  div.appendChild(btn);
+
+}
+
+function playSound( buffer ){
+  var sound = context.createBufferSource();
+  sound.buffer = buffer;
+  sound.connect(context.destination);
+  sound.start(0);
+}
+
+}).call(this);
+
+</script>
+</body>
+</html>
+
+
+

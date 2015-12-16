@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>Switch Button #2</title>
+        <link rel="stylesheet" href="css/style.css">
+  </head>
+
+  <body>
+
+  <label class="button" id="preloadder">
+    <center>
+    <div style="padding: 20px;color: white;"><h1>Loading....</h1></div>
+    </center>
+  </label>
+
+  <label id="switch" class="button" style="visibility: hidden;">
+    <input type="checkbox">
+    <span id="onButton"></span>
+    <span id="offButton"></span>
+  </label>  
+
+  <script src="https://s3-us-west-1.amazonaws.com/dolbydeveloper/1.1.0/js/dolby.min.js"></script>
+  
+  <script>
+
+  (function(){
+
+      var soundBuffer = null,
+          soundPlaying = 0,
+          startOffset = 0,
+          startTime = 0,
+          soundFile = 'sounds/Canon_in_D_Pachelbel.mp3',
+          source;
+
+      init();
+
+      function init(){
+        
+        // play Dolby Digital Plus version if browser supports it
+        if( Dolby.checkDDPlus() === true ) {
+          soundFile = 'sounds/Canon_in_D_Pachelbel_Dolby.mp4';
+        }
+
+        // Fix up prefixing
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        
+        context = new AudioContext();
+
+        // load sound file
+        loadSound( soundFile );
+
+        // link up switch on/off events
+        var onButton = document.getElementById('onButton');
+        onButton.addEventListener('click', buttonSwitch );
+
+        var offButton = document.getElementById('offButton');
+        offButton.addEventListener('click', buttonSwitch );
+
+      }
+
+      function buttonSwitch(){
+
+        // flip between off and on
+        soundPlaying = 1 - soundPlaying;
+
+        if( soundPlaying == 1 ){
+          startSound(); 
+        } else {
+          stopSound(); 
+        }
+      }
+
+      function startSound(){
+        startTime = context.currentTime;
+        
+        source = context.createBufferSource();
+        // Connect graph
+        source.buffer = soundBuffer;
+        source.loop = true;
+        source.connect(context.destination);
+        // Start playback, but make sure we stay in bound of the buffer.
+        source.start(0, startOffset % soundBuffer.duration);
+      
+      }
+
+      function stopSound(){
+        source.stop(); 
+        startOffset += context.currentTime - startTime;
+      }
+
+      function loadSound(url) {
+        var request = new XMLHttpRequest();
+        request.open('GET', url, true);
+        request.responseType = 'arraybuffer';
+
+        // Decode asynchronously
+        request.onload = function() {
+          context.decodeAudioData(request.response, function(buffer) {
+          
+            // set sound buffer
+            soundBuffer = buffer;
+
+            // show switch
+            document.getElementById("switch").style.visibility = "visible";
+          
+          }, onError);
+        }
+        request.send();
+      }
+
+      function onError() {
+        console.log( 'Error loading the file.' );
+      }           
+
+  }).call(this);
+
+  </script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-39200431-6', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+  </body>
+</html>

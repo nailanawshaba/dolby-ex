@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <style>
+    #image_block    {
+        width: 100%;
+        text-align: center;
+        position: absolute;
+        bottom: 25px;
+    }
+
+    </style>    
+  </head>
+<body>
+
+<div id="image_block"></div>
+
+<center>
+<div>
+    <img src="assets/thinking.jpg" id="facebox" style="border: 5px solid black; height: 350px;">
+</div>
+</center>
+
+
+<script src="https://s3-us-west-1.amazonaws.com/dolbydeveloper/1.1.0/js/dolby.min.js"></script>
+<script>
+
+(function() {
+
+    'use strict'
+
+    var sentence = "You can't play Dolby Digital Plus.",
+        faceUrl = 'assets/sad.jpg';
+
+    setupUI();
+    speak( sentence );
+        
+    // say a message
+    function speak(text, callback) {
+        var u = new SpeechSynthesisUtterance();
+        u.text = text;
+        u.lang = 'en-US';
+     
+        u.onend = function () {
+            if (callback) {
+                callback();
+            }
+        };
+     
+        u.onerror = function (e) {
+            if (callback) {
+                callback(e);
+            }
+        };
+     
+        speechSynthesis.speak(u);
+    }
+
+    function setupUI() {
+
+        if( Dolby.checkDDPlus() === true ) {
+
+            sentence = "You can play Dolby Digital Plus. That's AWESOME!";
+            faceUrl = 'assets/happy.jpg';
+
+            var imageBlock = document.getElementById('image_block');
+
+            var dolbyLogo = document.createElement('img');
+            dolbyLogo.src = 'assets/white-dolby-logo.png';
+            dolbyLogo.style.zIndex = "2000";
+            dolbyLogo.style.position = "relative";
+            imageBlock.appendChild(dolbyLogo);
+        };
+
+        var faceBox = document.getElementById("facebox");
+        faceBox.src = faceUrl;
+
+    }
+
+}).call(this);
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-39200431-6', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</body>
+</html>

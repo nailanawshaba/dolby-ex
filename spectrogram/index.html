@@ -1,0 +1,198 @@
+<!--
+Copyright 2010, Google Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+copyright notice, this list of conditions and the following disclaimer
+in the documentation and/or other materials provided with the
+distribution.
+    * Neither the name of Google Inc. nor the names of its
+contributors may be used to endorse or promote products derived from
+this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-->
+
+<!DOCTYPE html>
+<html >
+  <head>
+    <meta charset="UTF-8">
+    <title>
+    Spectrogram
+    </title>
+
+    <style>
+    #image_block    {
+        width: 100%;
+        text-align: center;
+        position: absolute;
+        bottom: 25px;
+    }
+
+    </style>
+
+
+    <!-- Slider stuff -->
+    <script type="text/javascript" src="js/events.js"></script>
+
+
+    <style type="text/css">
+      #slider { margin: 10px; }
+    </style>
+
+    <!-- Dolby -->
+    <script src="https://s3-us-west-1.amazonaws.com/dolbydeveloper/1.1.0/js/dolby.min.js"></script>
+
+    <!-- WebGL stuff -->
+    <script src="js/o3djs/base.js"></script>
+    <script src="js/cameracontroller.js"></script>
+
+    <!-- TODO(kbr): remove this dependency -->
+    <script src="js/matrix4x4.js"></script>
+
+    <!-- Visualizer GL library -->
+    <script type="text/javascript" src="js/visualizer.js"></script>
+
+    <!-- Our javascript code -->
+    <script type="text/javascript">
+
+    o3djs.require('o3djs.shader');
+
+    function output(str) {
+        console.log(str);
+    }
+
+    // Events
+    // init() once the page has finished loading.
+
+    // Temporary patch until all browsers support unprefixed context.
+    //if (window.hasOwnProperty('AudioContext') && !window.hasOwnProperty('webkitAudioContext'))
+        //window.webkitAudioContext = AudioContext;
+
+    window.onload = init;
+
+    var context;
+    var source;
+    var analyser;
+    var buffer;
+    var audioBuffer;
+
+    var analyserView;
+
+    function init() {
+        
+        analyserView = new AnalyserView("view");
+
+        initAudio();
+
+        analyserView.initByteBuffer();
+
+    }
+
+    function loadAudioBuffer(url) {
+        // Load asynchronously
+        var request = new XMLHttpRequest();
+        request.open("GET", url, true);
+        request.responseType = "arraybuffer";
+        request.onload = function() { 
+            context.decodeAudioData(
+                request.response,
+                function(b) {
+                    audioBuffer = b;
+                    finishLoad();  // add in the slider, etc. now that we've loaded the audio
+                },
+                function(buffer) {
+                    console.log("Error loading audio file!");
+                }
+            );
+        }
+
+        request.send();
+    }
+
+    function initAudio() {
+
+        window.AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext || window.msAudioContext;
+        context = new AudioContext();    
+        source = context.createBufferSource();
+        analyser = context.createAnalyser();
+        analyser.fftSize = 2048;
+
+        // Connect audio processing graph
+        source.connect(analyser);
+        analyser.connect(context.destination);
+
+        var audioSource = "assets/Luciano_Pavarotti.mp3";
+        if( Dolby.checkDDPlus() === true ) {
+
+            audioSource = "assets/Luciano_Pavarotti_Dolby.mp4";
+
+            var imageBlock = document.getElementById('image_block');
+
+            var dolbyLogo = document.createElement('img');
+            dolbyLogo.src = 'assets/white-dolby-logo.png';
+            dolbyLogo.style.zIndex = "2000";
+            dolbyLogo.style.position = "relative";
+            imageBlock.appendChild(dolbyLogo);
+
+        } 
+        loadAudioBuffer( audioSource );
+    }
+
+
+
+    function draw() {
+        analyserView.doFrequencyAnalysis();
+        window.requestAnimationFrame(draw);
+    }
+
+    function finishLoad() {
+        source.buffer = audioBuffer;
+        source.loop = true;
+        source.start(0.0);
+        window.requestAnimationFrame(draw);
+    }
+
+
+    </script>
+
+</head>
+
+<body>
+
+<div id="image_block"></div>
+
+<!-- Canvas tag for WebGL output -->
+<canvas id="view" width="1280px" height="600px"></canvas>
+
+<!-- Sliders and other controls will be added here -->
+<div id="controls"> </div>
+
+<!-- Analyser type -->
+<input type="radio" name="radioSet" value="data" onMouseDown="analyserView.setAnalysisType(ANALYSISTYPE_FREQUENCY);" />
+Frequency
+<input type="radio" name="radioSet" value="data" checked="checked" onMouseDown="analyserView.setAnalysisType(ANALYSISTYPE_SONOGRAM);" />
+Sonogram
+<input type="radio" name="radioSet" value="data" onMouseDown="analyserView.setAnalysisType(ANALYSISTYPE_3D_SONOGRAM);" />
+3D Sonogram
+<input type="radio" name="radioSet" value="data" onMouseDown="analyserView.setAnalysisType(ANALYSISTYPE_WAVEFORM);"/>
+Waveform
+
+</body>
+</html>
